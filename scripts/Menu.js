@@ -13,6 +13,26 @@ const Menu = {
     },
     load: async () => {
         const db = await Menu.openDB();
+        try {
+            const data = await API.fetchMenu();
+            Menu.data = data;
+
+            db.clear("categories");
+            data.forEach(category => db.add("categories", category));
+        } catch (err) {
+            // network error - go to the cache
+            if (await db.count("categories") > 0) {
+                Menu.data = await db.getAll("categories")
+                console.log('Data from the cache');
+            } else {
+                console.log('No data is available');
+            }
+        }
+
+        Menu.render();
+    },
+    loadCacheFirst: async () => {
+        const db = await Menu.openDB();
         // pattern cache-first
         if (await db.count("categories") === 0){
             const categories = await API.fetchMenu();
