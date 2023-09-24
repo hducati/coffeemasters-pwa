@@ -2,8 +2,23 @@ import API from './API.js';
 
 const Menu = {
     data: null,
+    openDB: async () => {
+        return await idb.openDB("cm-menu", 1, {
+            upgrade(db){
+                db.createObjectStore("categories", {
+                    keyPath: "name"
+                })
+            }
+        })
+    },
     load: async () => {
-        Menu.data = await API.fetchMenu();
+        const db = await Menu.openDB();
+        // pattern cache-first
+        if (await db.count("categories") === 0){
+            const categories = await API.fetchMenu();
+            categories.forEach(category => db.add("categories", category))
+        }
+        Menu.data = await db.getAll("categories");
         Menu.render();
     },
     getProductById: async id => {
