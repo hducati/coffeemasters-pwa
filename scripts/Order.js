@@ -2,6 +2,44 @@ import Menu from './Menu.js';
 
 const Order = {
     cart: [],
+    openDB: async () => {
+        return await idb.openDB("cm-storage", 1, {
+            // only executes if the db is not open
+            async upgrade(db) {
+                await db.createObjectStore("order")
+            }
+        })
+    },
+    load: async () => {
+        const db = await Order.openDB();
+        const cart = await db.get("order", "cart");
+        if (cart) {
+            try {
+                Order.cart = JSON.parse(cart);
+                Order.render(); 
+            } catch (err) {
+                console.log("Data corrupted");
+            }
+        }
+    },
+    save: async () => {
+        const db = await Order.openDB();
+        // value: key (in this case, cart is the key)
+        await db.put("order", JSON.stringify(Order.cart), "cart")
+    },
+    loadWS: () => {
+        if (localStorage.getItem("cm-cart")) {
+            try {
+                Order.cart = JSON.parse(localStorage.getItem("cm-cart"));
+                Order.render();
+            } catch (err) {
+                localStorage.removeItem("cm-cart");
+            }
+        }
+    },
+    saveWS: () => {
+        localStorage.setItem("cm-cart", JSON.stringify(Order.cart));
+    },
     add: async id => {
         const product = await Menu.getProductById(id);
         const results = Order.cart.filter(prodInCart => prodInCart.product.id==id);
@@ -23,6 +61,7 @@ const Order = {
         Order.render();
     },
     render: () => {
+        Order.save();
         if (Order.cart.length==0) {
             document.querySelector("#order").innerHTML = `
                 <p class="empty">Your order is empty</p>
@@ -60,5 +99,6 @@ const Order = {
         }
     }
 }
+Order.load();
 window.Order = Order; // make it "public"
 export default Order;
