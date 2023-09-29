@@ -30,6 +30,13 @@ const Menu = {
         }
 
         Menu.render();
+
+        if (Menu.data) {
+            const imageCache = await caches.open("cm-images");
+            Menu.data.forEach(category => imageCache.addAll(
+                category.products.map(product => `data/images/${product.image}`)
+            ))
+        }
     },
     loadCacheFirst: async () => {
         const db = await Menu.openDB();
