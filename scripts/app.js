@@ -2,7 +2,7 @@ import Menu from './Menu.js';
 import Order from './Order.js';
 import Router from './Router.js';
 
-navigator.serviceWorker.register("/serviceworker.js")
+// navigator.serviceWorker.register("/serviceworker.js")
 
 // Request persistence storage
 (async function() {

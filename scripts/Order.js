@@ -60,6 +60,36 @@ const Order = {
         Order.cart = [];
         Order.render();
     },
+    importCart: async () => {
+      const [ handle ] = await window.showOpenFilePicker();
+      const file = handle.getFile();
+
+      try {
+        const text = await file.text();
+        const json = JSON.parse(text);
+
+        if (json instanceof Array && json.length > 0) {
+            Order.cart = json;
+            Order.render();
+        } else {
+            alert("File is invalid");
+        }
+      } catch (err) {
+        alert("Error reading file");
+      }
+    },
+    exportCart: async () => {
+        const handle = await window.showSaveFilePicker({
+            types: [{
+                description: "JSON CoffeeMasters Cart File", 
+                accept: { "application/json": [".json", ".txt", ".cart"]}
+            }]
+        });
+        const file = await handle.getFile(); // read-only
+        const writable = await handle.createWritable(); // writing
+        await writable.write(JSON.stringify(Order.cart));
+        await writable.close();
+    },
     render: () => {
         Order.save();
         if (Order.cart.length==0) {
@@ -95,6 +125,18 @@ const Order = {
                     </ul>
                      <button onclick="Order.place()">Place Order</button>
                     `;
+                    if (window.showOpenFilePicker) {
+                        html += `
+                            <a class="navlink material-symbols-outlined" 
+                                href="javascript:Order.importCart()" style="color: var(--primaryColor")>
+                                file_upload
+                            </a>
+                            <a class="navlink material-symbols-outlined"  
+                                href="javascript:Order.exportCart()" style="color: var(--primaryColor")>
+                                file_download
+                            </a>
+                        `;
+                    } 
             document.querySelector("#order").innerHTML = html;
         }
     }
